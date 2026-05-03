@@ -590,7 +590,7 @@
           id: 3,
           category: "salads",
           name: "Mexican Salad",
-          price: 600000,
+          price: 700000,
           ingredients: [
             "Chicken",
             "Iceberg lettuce",
@@ -834,32 +834,6 @@
       /* ────────────── HELPERS ────────────── */
       const fmt = (n) => n?.toLocaleString("en-US") + " LBP";
 
-      function getLebanonTime() {
-        return new Date(
-          new Date().toLocaleString("en-US", { timeZone: "Asia/Beirut" }),
-        );
-      }
-
-      function checkOpen() {
-        const t = getLebanonTime();
-        const mins = t.getHours() * 60 + t.getMinutes();
-        return mins >= 660 && mins <= 1410; // 11:00–23:30
-      }
-
-      function minutesUntilOpen() {
-        const t = getLebanonTime();
-        const mins = t.getHours() * 60 + t.getMinutes();
-        if (mins < 660) return 660 - mins;
-        if (mins > 1410) return 660 + (1440 - mins); // next day
-        return 0;
-      }
-
-      function formatCountdown(m) {
-        const h = Math.floor(m / 60),
-          mn = m % 60;
-        return h > 0 ? `${h}h ${mn}m` : `${mn}m`;
-      }
-
       function buildWhatsApp({ cart, orderType, name, phone, address }) {
         const lines = [];
         lines.push("🍽️ *NEW ORDER — AMAR'S STREET FOOD*");
@@ -971,46 +945,12 @@
 
       /* ────────────── COMPONENTS ────────────── */
 
-      /* Closed Banner */
-      function ClosedBanner({ minsLeft }) {
-        return (
-          <div className="pulse-banner bg-red-600 text-white text-center py-2.5 px-4 text-sm font-semibold sticky top-0 z-50 shadow-md">
-            🔴 We're currently closed — Open 11:00 AM – 1:00 AM (Beirut)
-            {minsLeft > 0 && (
-              <span className="ml-2 font-normal opacity-90">
-                Opens in {formatCountdown(minsLeft)}
-              </span>
-            )}
-          </div>
-        );
-      }
-
-      /* Open Banner */
-      function OpenBanner() {
-        const [time, setTime] = useState(getLebanonTime());
-        useEffect(() => {
-          const id = setInterval(() => setTime(getLebanonTime()), 30000);
-          return () => clearInterval(id);
-        }, []);
-        const h = time.getHours(),
-          m = time.getMinutes();
-        const ampm = h >= 12 ? "PM" : "AM";
-        const h12 = h % 12 || 12;
-        return (
-          <div className="bg-green-600 text-white text-center py-2 px-4 text-sm sticky top-0 z-50">
-            🟢 We're open! &nbsp;·&nbsp; Beirut time: {h12}:
-            {String(m).padStart(2, "0")} {ampm} &nbsp;·&nbsp; Closes at 11:30 PM
-          </div>
-        );
-      }
-
       /* Header */
       function Header({
         activeCategory,
         onCategoryClick,
         totalItems,
         onCartOpen,
-        isOpen,
       }) {
         const [badgeAnim, setBadgeAnim] = useState(false);
         const prevCount = useRef(totalItems);
@@ -1135,15 +1075,12 @@
               </p>
               <button
                 onClick={(e) => {
-                  if (isOpen) {
-                    addRipple(e);
-                    onSelect(item);
-                  }
+                  addRipple(e);
+                  onSelect(item);
                 }}
-                disabled={!isOpen}
-                className={`mt-auto w-full py-2.5 rounded-xl font-semibold text-sm transition-all ripple-btn ${isOpen ? "bg-brand text-white hover:bg-brand-dark active:scale-[.98]" : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
+                className="mt-auto w-full py-2.5 rounded-xl font-semibold text-sm transition-all ripple-btn bg-brand text-white hover:bg-brand-dark active:scale-[.98]"
               >
-                {isOpen ? "+ Customize & Add" : "Store Closed"}
+                + Customize &amp; Add
               </button>
             </div>
           </div>
@@ -1536,7 +1473,7 @@
       }
 
       /* Checkout Panel */
-      function CheckoutPanel({ cart, totalPrice, onClose, isOpen: storeOpen }) {
+      function CheckoutPanel({ cart, totalPrice, onClose }) {
         const [orderType, setOrderType] = useState("pickup");
         const [name, setName] = useState("");
         const [phone, setPhone] = useState("");
@@ -1545,7 +1482,6 @@
 
         const canSend =
           cart.length > 0 &&
-          storeOpen &&
           (orderType === "pickup" || address.trim().length > 0);
 
         const handleSend = (e) => {
@@ -1709,12 +1645,6 @@
                     {fmt(totalPrice)}
                   </span>
                 </div>
-
-                {!storeOpen && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-600 font-medium text-center">
-                    🔴 Ordering is disabled outside business hours
-                  </div>
-                )}
               </div>
 
               {/* WhatsApp button */}
